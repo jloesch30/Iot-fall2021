@@ -1,0 +1,14 @@
+1.) Download VNC viewer for your OS: 
+https://www.realvnc.com/en/connect/download/viewer/ 
+
+2.) Once the Raspberry pi is powered on, search for a wifi access point named either IOT-MIS-* or MPC* and 
+connect to it 
+
+3.) Find the password for your Raspberry Pi’s network in the inventory sheet: 
+https://bit.ly/checkoutIoT 
+
+4.) Once you’re connected, start VNC viewer and enter the ip address 192.168.4.1 
+
+5.) At the connection prompt, the name of the device is ‘pi’ and the password is ‘raspberry’ 
+
+6.) Now the connection between the pi and your computer is established at the cost of internet to your computer. 
