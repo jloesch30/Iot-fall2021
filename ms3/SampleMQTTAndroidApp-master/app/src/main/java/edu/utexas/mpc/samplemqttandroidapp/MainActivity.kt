@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var mqttAndroidClient: MqttAndroidClient
 
     // you may need to change this depending on where your MQTT broker is running
-    val serverUri = "tcp://192.168.4.6:1883"
+    val serverUri = "tcp://192.168.4.1:1883"
     // you can use whatever name you want to here
     val clientId = "EmergingTechMQTTClient"
 

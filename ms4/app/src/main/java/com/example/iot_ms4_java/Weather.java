@@ -1,10 +1,16 @@
 package com.example.iot_ms4_java;
 
 public class Weather {
+    // make these public to be accessed elsewhere
+    public int id;
+    public String main;
+    public String icon;
+    public String description;
+
     public Weather(int id, String main, String description, String icon) {
-       id = id;
-       main = main;
-       description = description;
-       icon = icon;
+       this.id = id;
+       this.main = main;
+       this.description = description;
+       this.icon = icon;
     }
 }
