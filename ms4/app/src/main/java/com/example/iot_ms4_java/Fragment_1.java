@@ -6,9 +6,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -41,6 +43,7 @@ public class Fragment_1 extends Fragment {
     Button getWeatherBtn;
     Button sendWeatherBtn;
     Button connectToPIBtn;
+    ImageView weatherImage;
     MQTTClient mqttClient;
 
     // topics for MQTT client
@@ -72,6 +75,7 @@ public class Fragment_1 extends Fragment {
         gson = new Gson();
         weatherTextView = view.findViewById(R.id.currWeatherTextView);
         stepsTextView = view.findViewById(R.id.fragOneCurrSteps);
+        weatherImage = view.findViewById(R.id.fragOneImageView);
         mqttClient = new MQTTClient(UUID.randomUUID().toString(), "tcp://192.168.4.1:1883", thisContext);
 
         // get weather when app is pressed
@@ -168,7 +172,17 @@ public class Fragment_1 extends Fragment {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 String msg = message.toString();
-                stepsTextView.setText(msg.substring(msg.length() - 1));
+                msg = msg.substring(msg.length() - 1);
+                stepsTextView.setText(msg);
+                Log.d(TAG, "messageArrived:" + msg);
+                if (msg.equals("clouds")) {
+                    Log.d(TAG, "messageArrived: Clouds was recieved");
+                   // set the icon
+                    weatherImage.setImageResource(R.drawable.cloud_icon);
+                } else {
+                    Log.d(TAG, "messageArrived: Not clouds");
+                    weatherImage.setImageResource(R.drawable.storm_icon);
+                }
             }
 
             @Override

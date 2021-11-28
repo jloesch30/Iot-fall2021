@@ -77,5 +77,16 @@
         app:layout_constraintTop_toBottomOf="@+id/sendWeatherBtn"
         app:layout_constraintVertical_bias="0.0" />
 
+    <ImageView
+        android:id="@+id/fragOneImageView"
+        android:layout_width="63dp"
+        android:layout_height="71dp"
+        android:layout_marginEnd="60dp"
+        android:src="@drawable/cloud_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.43" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

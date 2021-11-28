@@ -1,7 +1,0 @@
-TODO
-    Get weather data
-        a. set up weather data to display images
-
-TODO
-    Set up second fragment
-        b. the second fragment will be used for the MQTT broker
