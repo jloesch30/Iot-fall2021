@@ -43,7 +43,6 @@ public class Fragment_1 extends Fragment {
     Button getWeatherBtn;
     Button sendWeatherBtn;
     Button connectToPIBtn;
-    ImageView weatherImage;
     MQTTClient mqttClient;
 
     // topics for MQTT client
@@ -75,7 +74,6 @@ public class Fragment_1 extends Fragment {
         gson = new Gson();
         weatherTextView = view.findViewById(R.id.currWeatherTextView);
         stepsTextView = view.findViewById(R.id.fragOneCurrSteps);
-        weatherImage = view.findViewById(R.id.fragOneImageView);
         mqttClient = new MQTTClient(UUID.randomUUID().toString(), "tcp://192.168.4.1:1883", thisContext);
 
         // get weather when app is pressed
@@ -177,11 +175,8 @@ public class Fragment_1 extends Fragment {
                 Log.d(TAG, "messageArrived:" + msg);
                 if (msg.equals("clouds")) {
                     Log.d(TAG, "messageArrived: Clouds was recieved");
-                   // set the icon
-                    weatherImage.setImageResource(R.drawable.cloud_icon);
                 } else {
                     Log.d(TAG, "messageArrived: Not clouds");
-                    weatherImage.setImageResource(R.drawable.storm_icon);
                 }
             }
 

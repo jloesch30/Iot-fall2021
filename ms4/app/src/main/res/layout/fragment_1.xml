@@ -12,12 +12,13 @@
         android:layout_height="wrap_content"
         android:text="Weather API Calls"
         android:textColor="@color/black"
-        android:textSize="20dp"
+        android:textSize="40dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.208" />
+        app:layout_constraintVertical_bias="0.126" />
 
     <Button
         android:id="@+id/getWeatherBtn"
@@ -57,10 +58,10 @@
         android:id="@+id/connectToPIBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="24dp"
         android:text="Connect to PI"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.469"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/currWeatherTextView" />
 
@@ -76,17 +77,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sendWeatherBtn"
         app:layout_constraintVertical_bias="0.0" />
-
-    <ImageView
-        android:id="@+id/fragOneImageView"
-        android:layout_width="63dp"
-        android:layout_height="71dp"
-        android:layout_marginEnd="60dp"
-        android:src="@drawable/cloud_icon"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.43" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
