@@ -1,6 +1,4 @@
-package com.example.iot_ms4_java;
-
-import java.lang.reflect.Array;
+package com.example.iot_ms5_java;
 
 public class WeatherResult {
 

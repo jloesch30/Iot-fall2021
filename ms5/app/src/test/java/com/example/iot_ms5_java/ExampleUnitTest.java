@@ -1,4 +1,4 @@
-package com.example.iot_ms4_java;
+package com.example.iot_ms5_java;
 
 import org.junit.Test;
 

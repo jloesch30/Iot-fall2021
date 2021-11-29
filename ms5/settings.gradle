@@ -6,5 +6,5 @@ dependencyResolutionManagement {
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
-rootProject.name = "IoT_ms4_java"
+rootProject.name = "IoT_ms5_java"
 include ':app'

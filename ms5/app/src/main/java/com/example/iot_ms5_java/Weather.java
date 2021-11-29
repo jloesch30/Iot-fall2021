@@ -1,4 +1,4 @@
-package com.example.iot_ms4_java;
+package com.example.iot_ms5_java;
 
 public class Weather {
     // make these public to be accessed elsewhere

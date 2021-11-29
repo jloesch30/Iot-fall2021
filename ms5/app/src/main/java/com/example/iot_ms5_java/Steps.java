@@ -1,4 +1,4 @@
-package com.example.iot_ms4_java;
+package com.example.iot_ms5_java;
 
 public class Steps {
     public int steps;

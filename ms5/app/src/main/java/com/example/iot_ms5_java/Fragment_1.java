@@ -1,4 +1,4 @@
-package com.example.iot_ms4_java;
+package com.example.iot_ms5_java;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -6,11 +6,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -23,18 +21,14 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 
-import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttToken;
 
+import com.squareup.picasso.Picasso;
 import java.util.Arrays;
 import java.util.UUID;
-
+import android.widget.ImageView;
 public class Fragment_1 extends Fragment {
 
     private static final String TAG = "dubugging";
@@ -136,6 +130,11 @@ public class Fragment_1 extends Fragment {
                         mostRecentWeather = gson.fromJson(response, WeatherResult.class);
                         Log.d("test2", Arrays.toString(new String[]{mostRecentWeather.weather[0].main}));
                         weatherTextView.setText(mostRecentWeather.weather[0].main);
+                        String icon = mostRecentWeather.weather[0].icon;
+                        String url = "https://openweathermap.org/img/wn/" + icon + "@2x.png";
+                        ImageView imageView = (ImageView) getView().findViewById(R.id.imageView);
+                        Picasso.with(thisContext).load(url).into(imageView);
+                        //Picasso.with(this).load(url).into(imageView)
                     }
                 },
                 new Response.ErrorListener() {
@@ -170,14 +169,7 @@ public class Fragment_1 extends Fragment {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 String msg = message.toString();
-                msg = msg.substring(msg.length() - 1);
-                stepsTextView.setText(msg);
-                Log.d(TAG, "messageArrived:" + msg);
-                if (msg.equals("clouds")) {
-                    Log.d(TAG, "messageArrived: Clouds was recieved");
-                } else {
-                    Log.d(TAG, "messageArrived: Not clouds");
-                }
+                stepsTextView.setText(msg.substring(msg.length() - 1));
             }
 
             @Override
