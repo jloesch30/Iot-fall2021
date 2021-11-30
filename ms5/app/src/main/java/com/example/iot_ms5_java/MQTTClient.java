@@ -9,6 +9,7 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONObject;
 
 public class MQTTClient {
     private static final String TAG = "MQTT client";
@@ -16,12 +17,14 @@ public class MQTTClient {
     public String serverID;
     public MqttAndroidClient client;
     public Context thisContext;
+    public boolean connected;
 
     public MQTTClient(String clientID, String serverID, Context thisContext) {
        // construct client
        this.clientID = clientID;
        this.serverID = serverID;
        this.thisContext = thisContext;
+       this.connected = false;
     }
 
     public void connect() {
@@ -38,6 +41,7 @@ public class MQTTClient {
 
                     Toast toast = Toast.makeText(thisContext, text, duration);
                     toast.show();
+                    connected = true;
                 }
 
                 @Override

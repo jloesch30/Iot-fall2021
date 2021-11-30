@@ -24,11 +24,11 @@ import com.google.gson.Gson;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.JSONObject;
 
-import com.squareup.picasso.Picasso;
-import java.util.Arrays;
 import java.util.UUID;
-import android.widget.ImageView;
+import java.util.concurrent.TimeUnit;
+
 public class Fragment_1 extends Fragment {
 
     private static final String TAG = "dubugging";
@@ -47,7 +47,20 @@ public class Fragment_1 extends Fragment {
     RequestQueue queue;
     Gson gson;
     WeatherResult mostRecentWeather;
+    DailyWeather dailyForecast;
     Context thisContext;
+
+    // weather to send to Raspberry PI
+    Double temp_min_curr;
+    Double temp_max_curr;
+    int humidity_curr;
+    Double temp_min_tomorrow;
+    Double temp_max_tomorrow;
+    int humidity_tomorrow;
+
+    // location
+    Double lon;
+    Double lat;
 
     public Fragment_1() {
         // Required empty public constructor
@@ -90,7 +103,14 @@ public class Fragment_1 extends Fragment {
             public void onClick(View v) {
                 // send data to PI via publish
                 try {
-                    sendWeather(weatherTopic, mostRecentWeather.weather[0].main);
+                    JSONObject jsonPayload = new JSONObject();
+                    jsonPayload.put("temp_min_curr", temp_min_curr);
+                    jsonPayload.put("temp_max_curr", temp_max_curr);
+                    jsonPayload.put("humidity_curr", humidity_curr);
+                    jsonPayload.put("temp_max_tomorrow", temp_max_tomorrow);
+                    jsonPayload.put("temp_min_tomorrow", temp_min_tomorrow);
+                    jsonPayload.put("humidity_tomorrow", humidity_tomorrow);
+                    sendWeather(weatherTopic, jsonPayload);
                 } catch (Exception e) {
                     Log.d(TAG, "onClick: There was a problem getting the weather..");
                     CharSequence text = "Make sure that the weather has been gathered..";
@@ -113,28 +133,64 @@ public class Fragment_1 extends Fragment {
         });
     }
 
-    public void sendWeather(String publishTopic, String payload) {
-        mqttClient.publish(publishTopic, payload);
+    public void sendWeather(String publishTopic, JSONObject payload) {
+        if (mqttClient.connected == false) {
+            syncWithPI();
+        }
+        mqttClient.publish(publishTopic, payload.toString());
         // get steps..
     }
 
     public void requestWeather() {
-        String url = "https://api.openweathermap.org/data/2.5/weather?id=4254010&appid=62823359f56f5a425fd7d24a47acaf35";
+        // changed url to return imperial units
+        String currUrl = "https://api.openweathermap.org/data/2.5/weather?units=imperial&id=4254010&appid=62823359f56f5a425fd7d24a47acaf35";
 
         // Request a string response
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+        StringRequest currStringRequest = new StringRequest(Request.Method.GET, currUrl,
                 new Response.Listener<String>() {
 
+                   // Get all of the weather data
+                    // 1. daily high temp
+                    // 2. daily low temp
+                    // 3. daily humidity
                     @Override
                     public void onResponse(String response) {
+                        Log.d(TAG, "onResponse: Full response for current weather is: " + response);
+
                         mostRecentWeather = gson.fromJson(response, WeatherResult.class);
-                        Log.d("test2", Arrays.toString(new String[]{mostRecentWeather.weather[0].main}));
+                        temp_min_curr = mostRecentWeather.main.temp_min;
+                        temp_max_curr = mostRecentWeather.main.temp_max;
+                        humidity_curr = mostRecentWeather.main.humidity;
+                        lat = mostRecentWeather.coord.lat;
+                        lon = mostRecentWeather.coord.lon;
+
                         weatherTextView.setText(mostRecentWeather.weather[0].main);
-                        String icon = mostRecentWeather.weather[0].icon;
-                        String url = "https://openweathermap.org/img/wn/" + icon + "@2x.png";
-                        ImageView imageView = (ImageView) getView().findViewById(R.id.imageView);
-                        Picasso.with(thisContext).load(url).into(imageView);
-                        //Picasso.with(this).load(url).into(imageView)
+
+                        // Getting forecast here
+                        String forecastUrl = String.format("https://api.openweathermap.org/data/2.5/onecall?units=imperial&lat=%s&lon=%s&exclude=current,minutely,hourly,alerts&appid=62823359f56f5a425fd7d24a47acaf35", lat, lon);
+                        StringRequest forecastStringReq = new StringRequest(Request.Method.GET, forecastUrl,
+                                new Response.Listener<String>() {
+                                    @Override
+                                    public void onResponse(String response) {
+                                        Log.d(TAG, "onResponse: Full response for forecast is: " + response);
+                                        dailyForecast = gson.fromJson(response, DailyWeather.class);
+                                        temp_max_tomorrow = dailyForecast.daily[1].temp.max;
+                                        temp_min_tomorrow = dailyForecast.daily[1].temp.min;
+                                        humidity_tomorrow = dailyForecast.daily[1].humidity;
+                                    }
+                                },
+                                new Response.ErrorListener() {
+                                    @SuppressLint("SetTextI18n")
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        CharSequence text = "Was unable to get forecast";
+                                        int duration = Toast.LENGTH_LONG;
+
+                                        Toast toast = Toast.makeText(thisContext, text, duration);
+                                        toast.show();
+                                    }
+                                });
+                        queue.add(forecastStringReq);
                     }
                 },
                 new Response.ErrorListener() {
@@ -149,8 +205,7 @@ public class Fragment_1 extends Fragment {
                         toast.show();
                     }
                 });
-
-        queue.add(stringRequest);
+        queue.add(currStringRequest);
     }
 
     public void syncWithPI() {
