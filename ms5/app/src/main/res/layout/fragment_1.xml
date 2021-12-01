@@ -10,7 +10,7 @@
         android:id="@+id/txtFrag1Title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Weather API Calls"
+        android:text="Weather Check"
         android:textColor="@color/black"
         android:textSize="40dp"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -209,29 +209,33 @@ public class Fragment_1 extends Fragment {
     }
 
     public void syncWithPI() {
-        mqttClient.connect();
-        mqttClient.client.setCallback(new MqttCallbackExtended() {
-            @Override
-            public void connectComplete(boolean reconnect, String serverURI) {
-                Log.d(TAG, "connectComplete: Connection was successful");
-            }
+        try {
+            mqttClient.connect();
+            mqttClient.client.setCallback(new MqttCallbackExtended() {
+                @Override
+                public void connectComplete(boolean reconnect, String serverURI) {
+                    Log.d(TAG, "connectComplete: Connection was successful");
+                }
 
-            @Override
-            public void connectionLost(Throwable cause) {
+                @Override
+                public void connectionLost(Throwable cause) {
 
-            }
+                }
 
-            @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
-                String msg = message.toString();
-                stepsTextView.setText(msg.substring(msg.length() - 1));
-            }
+                @Override
+                public void messageArrived(String topic, MqttMessage message) throws Exception {
+                    String msg = message.toString();
+                    stepsTextView.setText(msg.substring(msg.length() - 1));
+                }
 
-            @Override
-            public void deliveryComplete(IMqttDeliveryToken token) {
-                Log.d(TAG, "deliveryComplete: Message was delievered!");
-                mqttClient.subscribe(subTopic);
-            }
-        });
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+                    Log.d(TAG, "deliveryComplete: Message was delievered!");
+                    mqttClient.subscribe(subTopic);
+                }
+            });
+        } catch (Exception e) {
+            Log.d(TAG, "syncWithPI: There was a problem connecting a ");
+        }
     }
 }

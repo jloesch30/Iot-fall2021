@@ -27,7 +27,7 @@ public class MQTTClient {
        this.connected = false;
     }
 
-    public void connect() {
+    public void connect() throws Exception {
         Log.d(TAG, "connect: Connecting to PI");
         client = new MqttAndroidClient(this.thisContext, this.serverID, this.clientID);
 
@@ -49,10 +49,9 @@ public class MQTTClient {
                     Log.d(TAG, "onFailure: Client did not connect");
                 }
             });
-        } catch (MqttException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             Log.d(TAG, "connect: There was a problem..");
+            throw new Exception("There was a problem connecting");
         }
     }
 
