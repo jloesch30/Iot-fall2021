@@ -7,12 +7,86 @@ import time
 import json
 
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import sklearn.datasets as dt
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from numpy.random import seed
 
+class AdalineSGD(object):
+    def __init__(self, eta=0.01, n_iter=10, shuffle=True, random_state=None):
+        self.eta = eta
+        self.n_iter = n_iter
+        self.w_initialized = False
+        self.shuffle = shuffle
+        if random_state:
+            seed(random_state)
+        
+    def fit(self, X, y):
+        """ Fit training data.
+
+        Parameters
+        ----------
+        X : {array-like}, shape = [n_samples, n_features]
+            Training vectors, where n_samples is the number of samples and
+            n_features is the number of features.
+        y : array-like, shape = [n_samples]
+            Target values.
+
+        Returns
+        -------
+        self : object
+
+        """
+        self._initialize_weights(X.shape[1])
+        self.cost_ = []
+        for i in range(self.n_iter):
+            if self.shuffle:
+                X, y = self._shuffle(X, y)
+            cost = []
+            for xi, target in zip(X, y):
+                cost.append(self._update_weights(xi, target))
+            avg_cost = sum(cost) / len(y)
+            self.cost_.append(avg_cost)
+        return self
+
+    def partial_fit(self, X, y):
+        """Fit training data without reinitializing the weights"""
+        if not self.w_initialized:
+            self._initialize_weights(X.shape[1])
+        if y.ravel().shape[0] > 1:
+            for xi, target in zip(X, y):
+                self._update_weights(xi, target)
+        else:
+            self._update_weights(X, y)
+        return self
+
+    def _shuffle(self, X, y):
+        """Shuffle training data"""
+        r = np.random.permutation(len(y))
+        return X[r], y[r]
+    
+    def _initialize_weights(self, m):
+        """Initialize weights to zeros"""
+        self.w_ = np.zeros(1 + m)
+        self.w_initialized = True
+        
+    def _update_weights(self, xi, target):
+        """Apply Adaline learning rule to update the weights"""
+        output = self.net_input(xi)
+        error = (target - output)
+        self.w_[1:] += self.eta * xi.dot(error)
+        self.w_[0] += self.eta * error
+        cost = 0.5 * error**2
+        return cost
+    
+    def net_input(self, X):
+        """Calculate net input"""
+        return np.dot(X, self.w_[1:]) + self.w_[0]
+
+    def activation(self, X):
+        """Compute linear activation"""
+        return self.net_input(X)
+
+    def predict(self, X):
+        """Return class label after unit step"""
+        return np.where(self.activation(X) >= 0.0, 1, -1)
 
 class MQTTBroker:
     def __init__(self, client, broker_address, publishTopic, publishTopicGoal, btctrl):
@@ -26,6 +100,10 @@ class MQTTBroker:
         self.stepTracker = 0
         self.stepGoalToday = 0
         self.stepGoalTomorrow = 0
+        self.all_entries = [] 
+
+        # initialize ada model
+        self.adaclf = AdalineSGD()
 
     def _send_message(self, data):
         print("data being published is: {}".format(str(data)))
@@ -101,9 +179,37 @@ class MQTTBroker:
             min_temp_tomorrow = float(payload["temp_min_tomorrow"])
             humidity_tomorrow = int(payload["humidity_tomorrow"])
 
-            # perform prediction here
-            # use the trained model to make prediction
-            # TODO: get prediction
+            ''' model training '''
+
+            # get data into correct form
+            X_dict_today = {"max_temp_curr": max_temp_curr, "min_temp_curr": min_temp_curr, "humidity_curr": humidity_curr}
+            X_dict_tomorrow = {"max_temp_tomorrow": max_temp_tomorrow, "min_temp_tomorrow": min_temp_tomorrow, "humidity_tomorrow": humidity_tomorrow}
+
+            # make prediction
+            res = self.adaclf.predict(X_dict_today.values())
+            print(res)
+            pause = input() # DEBUGGING
+
+            # print prediction from new model
+
+            # print prediction from old model
+            
+
+            # add the incoming data to the data pool
+            # form will look like {"day".. "max_temp" .. "min_temp" .. "steps"}
+            
+            # get date
+            now = datetime.now()
+
+            # new entry
+            new_entry = {"date": str(now), "max_temp_curr": max_temp_curr, "min_temp_curr": min_temp_curr, "humidity_curr": humidity_curr, "steps": self.stepTracker} 
+            self.all_entries.append(new_entry.values())
+
+            # partial_fit the model with new entry included (getting the last ten entries)
+            pre_X = self.all_entries[-10:]
+            X = [x[1:-1] for x in pre_X] # skipping the "day" column and "steps" column
+            y = [x[len(x)-1:] for x in pre_X] # getting only step column
+            self.adaclf.partial_fit(X, y)
 
             # send the data to the topic
             self.client.publish(self.publishTopicGoal, json.dumps(
@@ -122,104 +228,6 @@ class MQTTBroker:
     def btControler_connect(self):
         self.btctrl.process = self._process_packet
         self.btctrl.send_scan_request()
-
-    def stochastic_gradient_descent(self, max_epochs, threshold, w_init,
-                                    obj_func, grad_func, xy,
-                                    learning_rate=0.05, momentum=0.8):
-        (x_train, y_train) = xy
-        w = w_init
-        w_history = w
-        f_history = obj_func(w, xy)
-        delta_w = np.zeros(w.shape)
-        i = 0
-        diff = 1.0e10
-        rows = x_train.shape[0]
-
-        # Run epochs
-        while (i < max_epochs):
-            # Shuffle rows using a fixed seed to reproduce the results
-            np.random.seed(i)
-            p = np.random.permutation(rows)
-
-            # Run for each instance/example in training set
-            for x, y in zip(x_train[p, :], y_train[p]):
-                delta_w = -learning_rate * \
-                    grad_func(w, (np.array([x]), y)) + momentum*delta_w
-                w = w+delta_w
-
-            i += 1
-            w_history = np.vstack((w_history, w))
-            f_history = np.vstack((f_history, obj_func(w, xy)))
-            diff = np.absolute(f_history[-1]-f_history[-2])
-
-        return w_history, f_history
-
-    def grad_mse(self, w, xy):
-        (x, y) = xy
-        (rows, cols) = x.shape
-
-        # Compute the output
-        o = np.sum(x*w, axis=1)
-        diff = y-o
-        diff = diff.reshape((rows, 1))
-        diff = np.tile(diff, (1, cols))
-        grad = diff*x
-        grad = -np.sum(grad, axis=0)
-        return grad
-
-    def mse(self, w, xy):
-        (x, y) = xy
-
-        o = np.sum(x*w, axis=1)
-        mse = np.sum((y-o)*(y-o))
-        mse = mse/2
-        return mse
-
-    def error(self, w, xy):
-        (x, y) = xy
-        o = np.sum(x*w, axis=1)
-
-        # map the output values to 0/1 class labels
-        ind_1 = np.where(o > 0.5)
-        ind_0 = np.where(o <= 0.5)
-        o[ind_1] = 1
-        o[ind_0] = 0
-        return np.sum((o-y)*(o-y))/y.size*100
-
-    def runRegression(self):
-        df = pd.read_csv(r"model_input.csv")
-        X = df[["max_temp", "min_temp", "humidity"]].values  # type: ignore
-
-        scaler = StandardScaler()
-
-        X = scaler.fit_transform(X)
-        X = np.asfarray(X, float)
-
-        y = df["steps"].values  # type: ignore
-        y = y.reshape(y.shape[0], 1)
-
-        ones_x = np.ones((670, 1))
-        X_ = np.concatenate((ones_x, X), axis=1)
-
-        y = np.asfarray(y, float)
-
-        rand = np.random.RandomState(19)
-        w_init = rand.uniform(-1, 1, X_.shape[1])*.001
-
-        w_history_stoch, mse_history_stoch = self.stochastic_gradient_descent(
-            1000, 0.1, w_init,
-            self.mse, self.grad_mse, (X_, y),
-            learning_rate=1e-6, momentum=0.7)
-
-        X1 = df[["max_temp"]].values  # type: ignore
-
-        X2 = df[["min_temp"]].values  # type: ignore
-        X3 = df[["humidity"]].values  # type: ignore
-
-        y_pred = w_history_stoch[1000][0] + w_history_stoch[1000][1] * \
-            X1 + w_history_stoch[1000][2]*X2 + w_history_stoch[1000][3]*X3
-        print("Max step:", y_pred.max(), ", Min step: ", y_pred.min())
-
 
 if __name__ == '__main__':
     mydev = 0
@@ -243,7 +251,6 @@ if __name__ == '__main__':
 
     # run model
     print("running regression...")
-    mq.runRegression()
 
     while mq.connected != True:
         time.sleep(0.1)
